@@ -1,5 +1,6 @@
 from rest_framework.serializers import ModelSerializer
 from peliculas.models import Character, CharacterMovie, Movie, Genre
+from django.contrib.auth.models import User
 
 
 class CharacterSerializer(ModelSerializer):
@@ -42,3 +43,8 @@ class GenreSerializer(ModelSerializer):
     class Meta:
         model = Genre
         fields = '__all__'
+
+class UserTokenSerializer(ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('username','email','password')
