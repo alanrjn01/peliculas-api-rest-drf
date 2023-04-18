@@ -42,10 +42,14 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'peliculas',
     'rest_framework',
-    'rest_framework.authtoken'
+    'rest_framework.authtoken',
+    'corsheaders'
 ]
 
+TOKEN_EXPIRED_AFTER_SECONDS = 120
+
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -53,6 +57,17 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+]
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5500",
+    "http://127.0.0.1:5500"
+]
+
+CORS_ORIGIN_WHITELIST = [
+    "http://localhost:5500",
+    "http://127.0.0.1:5500"
 ]
 
 ROOT_URLCONF = 'api_rest.urls'

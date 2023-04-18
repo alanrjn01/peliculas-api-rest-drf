@@ -1,4 +1,5 @@
 from django.utils import timezone
+from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 
 
@@ -30,3 +31,13 @@ def return_characters_list(queryset):
             }
         )
     return character_list
+
+
+def create_response(message='message', data=None, status=None):
+    response = Response()
+    response.accepted_renderer = JSONRenderer()
+    response.accepted_media_type = 'application/json'
+    response.renderer_context = {}
+    response.data = {message: data} if message else {data}
+    response.status_code = status
+    return response

@@ -7,9 +7,10 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from django.contrib.sessions.models import Session
 from .helpers import delete_sessions, create_response_with_token, return_characters_list
+from peliculas.authentication_mixins import Authentication
 
 
-class CharacterViewSet(ModelViewSet):
+class CharacterViewSet(Authentication, ModelViewSet):
     serializer_class = CharacterSerializer
 
     def get_queryset(self):
@@ -62,7 +63,6 @@ class CharacterViewSet(ModelViewSet):
             return Response(character_list, status=status.HTTP_200_OK)
         else:
             characters = self.get_serializer(self.get_queryset(), many=True)
-            print(characters)
             if characters:
                 return Response(characters.data, status=status.HTTP_200_OK)
         return Response({'message': 'bad request'}, status=status.HTTP_400_BAD_REQUEST)
@@ -133,3 +133,18 @@ class Logout(APIView):
                             status=status.HTTP_400_BAD_REQUEST)
         except Exception:
             return Response({'message': 'token invalido'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserToken(APIView):
+    def get(self, request, *args, **kwargs):
+        username = request.GET.get('username')
+        try:
+            user_token = Token.objects.get(
+                user=UserTokenSerializer().Meta.model.objects.filter(username=username).first())
+            return Response({
+                'token': user_token.key
+            })
+        except:
+            return Response({
+                'error': 'credenciales incorrectas o inexistentes'
+            }, status.HTTP_400_BAD_REQUEST)
