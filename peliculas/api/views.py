@@ -1,16 +1,17 @@
 from rest_framework.response import Response
-from rest_framework.viewsets import ModelViewSet
 from rest_framework import status
-from rest_framework.views import APIView
-from .serializers import CharacterSerializer, CharacterMovieSerializer, MovieSerializer, UserTokenSerializer
-from rest_framework.authtoken.views import ObtainAuthToken
-from rest_framework.authtoken.models import Token
-from django.contrib.sessions.models import Session
-from .helpers import delete_sessions, create_response_with_token, return_characters_list
+from rest_framework.response import Response
+from rest_framework.viewsets import ModelViewSet
+
+from .helpers import return_characters_list
+from .serializers import CharacterSerializer, CharacterMovieSerializer
 
 
 class CharacterViewSet(ModelViewSet):
     serializer_class = CharacterSerializer
+
+    # valida que tiene que haber un token asociado al usuario que estoy intentando enviar para una clase en especifico
+    # permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
         return self.get_serializer().Meta.model.objects.filter()
@@ -73,63 +74,3 @@ class CharacterMovieViewSet(ModelViewSet):
 
     def get_queryset(self):
         return self.get_serializer().Meta.model.objects.filter()
-
-
-class Login(ObtainAuthToken):
-
-    def post(self, request, *args, **kwargs):
-        # usa el AuthTokenSerializer para crear un serializer con la data del request
-        login_serializer = self.serializer_class(data=request.data, context={'request': request})
-        # comprueba si es valido al pasarla por el serializador
-        if login_serializer.is_valid():
-            # obtiene el user del loginserializer validado
-            user = login_serializer.validated_data['user']
-            # comprueba si el usuario esta activo
-            if user.is_active:
-                # obtiene en la tabla de Token la instancia donde el usuario sea igual al usuario del request
-                token, created = Token.objects.get_or_create(user=user)
-                # utilizo el serializador de usuario
-                user_serializer = UserTokenSerializer(user)
-                # si el token para ese usuario no existia y fue creado:
-                if created:
-                    create_response_with_token(token.key, user_serializer.data,
-                                               'token creado por primera vez', status.HTTP_201_CREATED)
-                # si el token ya existia, se elimina la sesion al mismo y el token y se crea un token nuevo
-                else:
-                    if delete_sessions(user, Session):
-                        token.delete()
-                        token, created = Token.objects.get_or_create(user=user)
-                        return create_response_with_token(token.key, user_serializer.data,
-                                                          'el token fue eliminado y se le asigno uno nuevo',
-                                                          status.HTTP_201_CREATED)
-            # si el usuario no esta activo:
-            else:
-                return Response({'message:''el usuario no se encuentra activo'})
-        # inicio de sesion incorrecto
-        return Response({'message': 'inicio de sesion incorrecto'}, status=status.HTTP_200_OK)
-
-
-class Logout(APIView):
-
-    def post(self, request, *args, **kwargs):
-
-        # recibe la key por un formdata y la busca en la base de datos
-        try:
-            request_token = request.data['key']
-            token = Token.objects.filter(key=request_token).first()
-            # si encuentra la key el usuario relacionado con la misma lo elimina y su sesion tambien
-            if token:
-                user = token.user
-                delete_sessions(user, Session)
-                # tambien se elimina el token
-                token.delete()
-                session_message = 'sesisones de usuario eliminadas'
-                token_message = 'token eliminado'
-                return Response({
-                    'session_message': session_message,
-                    'token_message': token_message
-                }, status=status.HTTP_200_OK)
-            return Response({'message': 'no se ha encontrado el token especificado'},
-                            status=status.HTTP_400_BAD_REQUEST)
-        except Exception:
-            return Response({'message': 'token invalido'}, status=status.HTTP_400_BAD_REQUEST)

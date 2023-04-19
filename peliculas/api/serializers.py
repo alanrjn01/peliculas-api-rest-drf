@@ -1,10 +1,10 @@
 from rest_framework.serializers import ModelSerializer
 from peliculas.models import Character, CharacterMovie, Movie, Genre
 from django.contrib.auth.models import User
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 
 class CharacterSerializer(ModelSerializer):
-
     class Meta:
         model = Character
         fields = '__all__'
@@ -13,9 +13,9 @@ class CharacterSerializer(ModelSerializer):
         return {
             'id': instance.id,
             'name': instance.name,
-            'age' : instance.age,
-            'weight' : instance.weight,
-            'story' : instance.story
+            'age': instance.age,
+            'weight': instance.weight,
+            'story': instance.story
         }
 
 
@@ -33,7 +33,6 @@ class CharacterMovieSerializer(ModelSerializer):
 
 
 class MovieSerializer(ModelSerializer):
-
     class Meta:
         model = Movie
         fields = '__all__'
@@ -44,7 +43,12 @@ class GenreSerializer(ModelSerializer):
         model = Genre
         fields = '__all__'
 
-class UserTokenSerializer(ModelSerializer):
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    pass
+
+
+class UserSerializer(ModelSerializer):
     class Meta:
         model = User
-        fields = ('username','email','password')
+        fields = ('username', 'email')

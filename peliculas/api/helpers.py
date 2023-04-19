@@ -13,14 +13,6 @@ def delete_sessions(user, session_class):
     return False
 
 
-def create_response_with_token(token, user_serializer, message, status):
-    return Response({
-        'token': token,
-        'user': user_serializer,
-        'message': message,
-    }, status=status)
-
-
 def return_characters_list(queryset):
     character_list = []
     for character in queryset:
