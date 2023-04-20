@@ -37,6 +37,13 @@ class MovieSerializer(ModelSerializer):
         model = Movie
         fields = '__all__'
 
+    def to_representation(self, instance):
+        return {
+            'title': instance.title,
+            'release_date': instance.release_date
+        }
+
+
 
 class GenreSerializer(ModelSerializer):
     class Meta:

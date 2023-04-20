@@ -15,19 +15,6 @@ class Character(models.Model):
         return self.name
 
 
-class Movie(models.Model):
-    title = models.CharField(max_length=300)
-    release_date = models.DateField(blank=True)
-    rate = models.IntegerField()
-
-    class Meta:
-        verbose_name = "Movie"
-        verbose_name_plural = "Movies"
-
-    def __str__(self):
-        return self.title
-
-
 class Genre(models.Model):
     name = models.CharField(max_length=200)
 
@@ -37,6 +24,20 @@ class Genre(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Movie(models.Model):
+    title = models.CharField(max_length=300)
+    release_date = models.DateField(blank=True)
+    rate = models.IntegerField()
+    genre_id = models.ForeignKey(Genre, on_delete=models.CASCADE, default=None)
+
+    class Meta:
+        verbose_name = "Movie"
+        verbose_name_plural = "Movies"
+
+    def __str__(self):
+        return self.title
 
 
 class CharacterMovie(models.Model):

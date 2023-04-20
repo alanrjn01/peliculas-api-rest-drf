@@ -9,9 +9,8 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.generics import CreateAPIView
 
-
 from .helpers import return_characters_list
-from .serializers import CharacterSerializer, CharacterMovieSerializer, UserSerializer
+from .serializers import CharacterSerializer, CharacterMovieSerializer, UserSerializer, MovieSerializer, GenreSerializer
 
 
 class UserCreateApiView(CreateAPIView):
@@ -80,7 +79,6 @@ class CharacterViewSet(ModelViewSet):
         return Response(objeto)
 
     def list(self, request):
-        permission_classes = (IsAuthenticated,)
 
         param = request.query_params
 
@@ -102,7 +100,7 @@ class CharacterViewSet(ModelViewSet):
             for movies in queryset:
                 character_list.append(
                     {
-                        'name': movies.character_id.name
+                        'character_name': movies.character_id.name
                     }
                 )
             return Response(character_list, status=status.HTTP_200_OK)
@@ -112,6 +110,65 @@ class CharacterViewSet(ModelViewSet):
             if characters:
                 return Response(characters.data, status=status.HTTP_200_OK)
         return Response({'message': 'bad request'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class MovieViewSet(ModelViewSet):
+    serializer_class = MovieSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        return self.get_serializer().Meta.model.objects.filter()
+
+    def list(self, request):
+        """
+        endpoint principal GET /api/movies
+         * puede recibir un query param -> 'name', 'genre', 'order'
+         * en caso de no recibir una query, devuelve un listado de todas las peliculas
+        """
+        param = request.query_params
+
+        if param:
+
+            if param.get('name'):
+                queryset = self.get_serializer().Meta.model.objects.filter(name=param.get('name'))
+                if queryset:
+                    movies = return_characters_list(queryset)
+                    return Response(movies, status=status.HTTP_200_OK)
+
+            elif param.get('genre'):
+                movies = self.get_serializer().Meta.model.objects.filter(genre_id=param.get('genre'))
+                movies_by_genre = []
+                if movies:
+                    for movie in movies:
+                        movies_by_genre.append({
+                            'movie_title': movie.title
+                        })
+                    return Response(movies_by_genre, status=status.HTTP_200_OK)
+
+            elif param.get('order') == 'ASC' or param.get('order') == 'DESC':
+                movies_order_by_creation_date = list(self.get_serializer_class().Meta.model.objects.filter().order_by(
+                    'release_date' if param.get('order') == 'ASC' else '-release_date').values())
+                return Response(movies_order_by_creation_date, status=status.HTTP_200_OK)
+
+            return Response({'message': 'wrong query param'}, status=status.HTTP_400_BAD_REQUEST)
+
+        else:
+            movies = list(self.get_queryset().values('title', 'release_date'))
+            return Response(movies, status=status.HTTP_200_OK)
+
+    def retrieve(self, request, pk, *args, **kwargs):
+        movie = self.get_serializer().Meta.model.objects.filter(id=pk).first()
+        characters = CharacterMovieSerializer.Meta.model.objects.filter(movie_id=pk)
+        characters_list = []
+        for character in characters:
+            characters_list.append({
+                'character_name': character.character_id.name
+            })
+        json = {
+            'movie': movie.title,
+            'characters': characters_list
+        }
+        return Response(json)
 
 
 class CharacterMovieViewSet(ModelViewSet):
