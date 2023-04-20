@@ -35,20 +35,33 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
-    # para que la autenticacion con simple_jwt sea global (en todos los endpoints)
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-    )
+    # # para que la autenticacion con simple_jwt sea global (en todos los endpoints)
+    # 'DEFAULT_PERMISSION_CLASSES': (
+    #     'rest_framework.permissions.IsAuthenticated',
+    # )
 }
 
 # configuracion de simple_jwt
 # -> declaracion de header, tiempo de video del token de acceso y del token de refresco
+
 SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
-    'ACCESS_TOKEN_LIFETIME': timedelta(seconds=60),
-    'REFRESH_TOKEN_LIFETIME': timedelta(seconds=120),
+    'ACCESS_TOKEN_LIFETIME': timedelta(seconds=180),
+    'REFRESH_TOKEN_LIFETIME': timedelta(seconds=240),
 }
+
+# EMAIL
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = os.getenv('EMAIL_HOST')
+EMAIL_PORT = os.getenv('EMAIL_PORT')
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+EMAIL_USE_TLS = True
+
 # Application definition
+
+
 
 INSTALLED_APPS = [
     'django.contrib.admin',

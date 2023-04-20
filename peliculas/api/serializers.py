@@ -51,4 +51,17 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 class UserSerializer(ModelSerializer):
     class Meta:
         model = User
-        fields = ('username', 'email')
+        fields = ('first_name', 'last_name', 'email', 'username', 'password')
+
+    # el metodo create de UserSerializer se encarga de crear una instancia de User con los datos validados
+    # y hashea la contraseña, luego guarda la instancia en la base de datos
+    def create(self, validated_data):
+        user = User(**validated_data)
+        user.set_password(validated_data['password'])
+        user.save()
+        return user
+
+    # def to_representation(self, instance):
+    #     return {
+    #         "name": instance.first_name
+    #     }
