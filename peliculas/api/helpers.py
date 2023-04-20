@@ -1,5 +1,4 @@
 from django.utils import timezone
-from rest_framework.response import Response
 
 
 def delete_sessions(user, session_class):

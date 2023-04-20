@@ -177,3 +177,11 @@ class CharacterMovieViewSet(ModelViewSet):
 
     def get_queryset(self):
         return self.get_serializer().Meta.model.objects.filter()
+
+
+class GenreViewSet(ModelViewSet):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = GenreSerializer
+
+    def get_queryset(self):
+        return self.get_serializer().Meta.model.objects.filter()
