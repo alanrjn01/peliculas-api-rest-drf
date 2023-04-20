@@ -39,10 +39,10 @@ class MovieSerializer(ModelSerializer):
 
     def to_representation(self, instance):
         return {
+            'id': instance.id,
             'title': instance.title,
             'release_date': instance.release_date
         }
-
 
 
 class GenreSerializer(ModelSerializer):

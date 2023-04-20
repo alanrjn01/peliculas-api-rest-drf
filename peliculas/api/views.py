@@ -9,7 +9,6 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.generics import CreateAPIView
 
-from .helpers import return_characters_list
 from .serializers import CharacterSerializer, CharacterMovieSerializer, UserSerializer, MovieSerializer, GenreSerializer
 
 
@@ -21,6 +20,7 @@ class UserCreateApiView(CreateAPIView):
 
     def post(self, request, *args, **kwargs):
         created_user = self.create(request, *args, **kwargs)
+
         # creo el contenido del html utilizando un template, al cual le paso variables de 'username' y 'password'
         html_content = render_to_string('email_template.html', {
             'username': created_user.data['username'],
@@ -45,68 +45,68 @@ class UserCreateApiView(CreateAPIView):
         email.fail_silently = False
         # envio del mail
         email.send()
-        return created_user
+        return Response(created_user, status=status.HTTP_201_CREATED)
 
 
 class CharacterViewSet(ModelViewSet):
     permission_classes = (IsAuthenticated,)
-
     serializer_class = CharacterSerializer
-
-    # valida que tiene que haber un token asociado al usuario que estoy intentando enviar para una clase en especifico
-    # permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
         return self.get_serializer().Meta.model.objects.filter()
 
-    def retrieve(self, request, pk, *args, **kwargs):
+    def retrieve(self, request, *args, **kwargs):
+        # self.get_object().id -> obtiene id sin pasar un pk
 
+        # obtiene una lista de las peliculas donde hayan participado los personajes con el id consultado
         queryset = CharacterMovieSerializer.Meta.model.objects.filter(character_id=self.get_object().id)
-        movies_list = []
-        for movie in queryset:
-            movies_list.append(
-                {
-                    'movie': movie.movie_id.title
-                }
-            )
-        objeto = {
+
+        # utiliza map para retornar en cada iteracion el titulo de la pelicula del queryset
+        movies_by_character_id = list(map(lambda movie: {'movie_title': movie.movie_id.title}, queryset))
+
+        character_json = {
             'name': self.get_object().name,
             'age': self.get_object().age,
             "weight": self.get_object().weight,
             "story": self.get_object().story,
-            "movies_relationated": movies_list
+            "movie_list": movies_by_character_id or None
         }
-        return Response(objeto)
+        return Response(character_json, status=status.HTTP_200_OK)
 
     def list(self, request):
-
+        """
+            endpoint principal GET /api/character
+            * puede recibir un query param -> 'name', 'age', 'movie'
+            * en caso de no recibir una query, devuelve un listado de todos los personajes
+        """
         param = request.query_params
 
-        if param.get('name'):
-            queryset = self.get_serializer().Meta.model.objects.filter(name=param.get('name'))
-            if queryset:
-                characters = return_characters_list(queryset)
-                return Response(characters, status=status.HTTP_200_OK)
+        if param:
 
-        elif param.get('age'):
-            queryset = self.get_serializer().Meta.model.objects.filter(age=param.get('age'))
-            characters = return_characters_list(queryset)
-            if characters:
-                return Response(characters, status=status.HTTP_200_OK)
+            if param.get('name'):
+                queryset = list(self.get_serializer().Meta.model.objects.filter(name=param.get('name')).values())
+                if queryset:
+                    return Response(queryset, status=status.HTTP_200_OK)
 
-        elif param.get('movie'):
-            queryset = CharacterMovieSerializer.Meta.model.objects.filter(movie_id=param.get('movie'))
-            character_list = []
-            for movies in queryset:
-                character_list.append(
-                    {
-                        'character_name': movies.character_id.name
-                    }
-                )
-            return Response(character_list, status=status.HTTP_200_OK)
+            elif param.get('age'):
+                queryset = list(self.get_serializer().Meta.model.objects.filter(age=param.get('age')).values())
+                if queryset:
+                    return Response(queryset, status=status.HTTP_200_OK)
+
+            # en el map, retorno un objeto con la propiedad 'character' que:
+            # Utiliza El Serializer de Character para utilizar el metodo to representation pasandole
+            # como instancia el character del queryset
+            elif param.get('movie'):
+                queryset = CharacterMovieSerializer.Meta.model.objects.filter(movie_id=param.get('movie'))
+                queryset_list = list(map(lambda character: {'character': CharacterSerializer().to_representation(character.
+                                                            character_id)}, queryset))
+                return Response(queryset_list, status=status.HTTP_200_OK)
+
+            return Response({'message': 'wrong query param'}, status=status.HTTP_400_BAD_REQUEST)
+
         else:
+            # se le pasa el queryset al serializer y al tener la propiedad many=true retorna un json
             characters = self.get_serializer(self.get_queryset(), many=True)
-            print(characters)
             if characters:
                 return Response(characters.data, status=status.HTTP_200_OK)
         return Response({'message': 'bad request'}, status=status.HTTP_400_BAD_REQUEST)
@@ -130,20 +130,17 @@ class MovieViewSet(ModelViewSet):
         if param:
 
             if param.get('name'):
-                queryset = self.get_serializer().Meta.model.objects.filter(name=param.get('name'))
-                if queryset:
-                    movies = return_characters_list(queryset)
-                    return Response(movies, status=status.HTTP_200_OK)
+                # puede mejorarse con un contains o startwith
+                movies = self.get_serializer().Meta.model.objects.filter(title=param.get('name'))
+                if movies:
+                    movies_serializer = self.get_serializer(movies, many=True)
+                    return Response(movies_serializer.data, status=status.HTTP_200_OK)
 
             elif param.get('genre'):
                 movies = self.get_serializer().Meta.model.objects.filter(genre_id=param.get('genre'))
-                movies_by_genre = []
                 if movies:
-                    for movie in movies:
-                        movies_by_genre.append({
-                            'movie_title': movie.title
-                        })
-                    return Response(movies_by_genre, status=status.HTTP_200_OK)
+                    movies_serializer = self.get_serializer(movies, many=True)
+                    return Response(movies_serializer.data, status=status.HTTP_200_OK)
 
             elif param.get('order') == 'ASC' or param.get('order') == 'DESC':
                 movies_order_by_creation_date = list(self.get_serializer_class().Meta.model.objects.filter().order_by(
@@ -153,19 +150,23 @@ class MovieViewSet(ModelViewSet):
             return Response({'message': 'wrong query param'}, status=status.HTTP_400_BAD_REQUEST)
 
         else:
-            movies = list(self.get_queryset().values('title', 'release_date'))
-            return Response(movies, status=status.HTTP_200_OK)
+            movies = self.get_serializer(self.get_queryset(), many=True)
+            return Response(movies.data, status=status.HTTP_200_OK)
 
-    def retrieve(self, request, pk, *args, **kwargs):
-        movie = self.get_serializer().Meta.model.objects.filter(id=pk).first()
-        characters = CharacterMovieSerializer.Meta.model.objects.filter(movie_id=pk)
-        characters_list = []
-        for character in characters:
-            characters_list.append({
-                'character_name': character.character_id.name
-            })
+    def retrieve(self, request, *args, **kwargs):
+        """
+        Busca en la tabla de CharacterMovie la pelicula por id
+        crea una lista donde ingreso todos los personas como objetos serializados del queryset movie
+        para obtener el nombre de la pelicula utilizo el metodo first() del queryset 'movie' y obtengo su id y lo
+        convierto a string
+        """
+
+        movie = CharacterMovieSerializer.Meta.model.objects.filter(movie_id=self.get_object())
+
+        characters_list = list(map(lambda character: CharacterSerializer().to_representation(
+                                                        character.character_id), movie))
         json = {
-            'movie': movie.title,
+            'movie': str(movie.first().movie_id),
             'characters': characters_list
         }
         return Response(json)
