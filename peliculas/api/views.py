@@ -20,6 +20,7 @@ class UserCreateApiView(CreateAPIView):
         return self.get_serializer().Meta.model.objects.filter()
 
     def post(self, request, *args, **kwargs):
+        print("hola")
         created_user = self.create(request, *args, **kwargs)
 
         # creo el contenido del html utilizando un template, al cual le paso variables de 'username' y 'password'
@@ -46,7 +47,7 @@ class UserCreateApiView(CreateAPIView):
         email.fail_silently = False
         # envio del mail
         email.send()
-        return Response(created_user, status=status.HTTP_201_CREATED)
+        return Response(created_user.data, status=status.HTTP_201_CREATED)
 
 
 class CharacterViewSet(ModelViewSet):
@@ -180,8 +181,8 @@ class MovieViewSet(ModelViewSet):
 
     def retrieve(self, request, *args, **kwargs):
         """
-        Busca en la tabla de CharacterMovie la pelicula por id
-        crea una lista donde ingreso todos los personas como objetos serializados del queryset movie
+        Busco en la tabla de CharacterMovie la pelicula por id
+        creo una lista donde ingreso todos los personas como objetos serializados del queryset movie
         para obtener el nombre de la pelicula utilizo el metodo first() del queryset 'movie' y obtengo su id y lo
         convierto a string
         """
