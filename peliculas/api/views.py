@@ -10,6 +10,7 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.generics import CreateAPIView
 
 from .serializers import CharacterSerializer, CharacterMovieSerializer, UserSerializer, MovieSerializer, GenreSerializer
+from . import helper
 
 
 class UserCreateApiView(CreateAPIView):
@@ -55,6 +56,18 @@ class CharacterViewSet(ModelViewSet):
     def get_queryset(self):
         return self.get_serializer().Meta.model.objects.filter()
 
+    def create(self, request, *args, **kwargs):
+        return helper.create_with_authorization(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        return helper.destroy_with_authorization(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        return helper.update_with_authorization(self, request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        return helper.partial_update_with_authorization(self, request, *args, **kwargs)
+
     def retrieve(self, request, *args, **kwargs):
         # self.get_object().id -> obtiene id sin pasar un pk
 
@@ -73,7 +86,7 @@ class CharacterViewSet(ModelViewSet):
         }
         return Response(character_json, status=status.HTTP_200_OK)
 
-    def list(self, request):
+    def list(self, request, *args, **kwargs):
         """
             endpoint principal GET /api/character
             * puede recibir un query param -> 'name', 'age', 'movie'
@@ -98,8 +111,8 @@ class CharacterViewSet(ModelViewSet):
             # como instancia el character del queryset
             elif param.get('movie'):
                 queryset = CharacterMovieSerializer.Meta.model.objects.filter(movie_id=param.get('movie'))
-                queryset_list = list(map(lambda character: {'character': CharacterSerializer().to_representation(character.
-                                                            character_id)}, queryset))
+                queryset_list = list(map(lambda character: {'character': CharacterSerializer().
+                                         to_representation(character.character_id)}, queryset))
                 return Response(queryset_list, status=status.HTTP_200_OK)
 
             return Response({'message': 'wrong query param'}, status=status.HTTP_400_BAD_REQUEST)
@@ -119,7 +132,19 @@ class MovieViewSet(ModelViewSet):
     def get_queryset(self):
         return self.get_serializer().Meta.model.objects.filter()
 
-    def list(self, request):
+    def create(self, request, *args, **kwargs):
+        return helper.create_with_authorization(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        return helper.destroy_with_authorization(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        return helper.update_with_authorization(self, request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        return helper.partial_update_with_authorization(self, request, *args, **kwargs)
+
+    def list(self, request, *args, **kwargs):
         """
         endpoint principal GET /api/movies
          * puede recibir un query param -> 'name', 'genre', 'order'
@@ -164,7 +189,7 @@ class MovieViewSet(ModelViewSet):
         movie = CharacterMovieSerializer.Meta.model.objects.filter(movie_id=self.get_object())
 
         characters_list = list(map(lambda character: CharacterSerializer().to_representation(
-                                                        character.character_id), movie))
+            character.character_id), movie))
         json = {
             'movie': str(movie.first().movie_id),
             'characters': characters_list
@@ -179,6 +204,18 @@ class CharacterMovieViewSet(ModelViewSet):
     def get_queryset(self):
         return self.get_serializer().Meta.model.objects.filter()
 
+    def create(self, request, *args, **kwargs):
+        return helper.create_with_authorization(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        return helper.destroy_with_authorization(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        return helper.update_with_authorization(self, request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        return helper.partial_update_with_authorization(self, request, *args, **kwargs)
+
 
 class GenreViewSet(ModelViewSet):
     permission_classes = (IsAuthenticated,)
@@ -186,3 +223,15 @@ class GenreViewSet(ModelViewSet):
 
     def get_queryset(self):
         return self.get_serializer().Meta.model.objects.filter()
+
+    def create(self, request, *args, **kwargs):
+        return helper.create_with_authorization(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        return helper.destroy_with_authorization(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        return helper.update_with_authorization(self, request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        return helper.partial_update_with_authorization(self, request, *args, **kwargs)
