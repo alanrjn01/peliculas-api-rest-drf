@@ -58,10 +58,10 @@ class CharacterViewSet(ModelViewSet):
         return self.get_serializer().Meta.model.objects.filter()
 
     def create(self, request, *args, **kwargs):
-        return helper.create_with_authorization(request, *args, **kwargs)
+        return helper.create_with_authorization(self, request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
-        return helper.destroy_with_authorization(request, *args, **kwargs)
+        return helper.destroy_with_authorization(self, request, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):
         return helper.update_with_authorization(self, request, *args, **kwargs)
@@ -134,10 +134,10 @@ class MovieViewSet(ModelViewSet):
         return self.get_serializer().Meta.model.objects.filter()
 
     def create(self, request, *args, **kwargs):
-        return helper.create_with_authorization(request, *args, **kwargs)
+        return helper.create_with_authorization(self, request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
-        return helper.destroy_with_authorization(request, *args, **kwargs)
+        return helper.destroy_with_authorization(self, request, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):
         return helper.update_with_authorization(self, request, *args, **kwargs)
@@ -206,10 +206,10 @@ class CharacterMovieViewSet(ModelViewSet):
         return self.get_serializer().Meta.model.objects.filter()
 
     def create(self, request, *args, **kwargs):
-        return helper.create_with_authorization(request, *args, **kwargs)
+        return helper.create_with_authorization(self, request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
-        return helper.destroy_with_authorization(request, *args, **kwargs)
+        return helper.destroy_with_authorization(self, request, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):
         return helper.update_with_authorization(self, request, *args, **kwargs)
@@ -226,10 +226,10 @@ class GenreViewSet(ModelViewSet):
         return self.get_serializer().Meta.model.objects.filter()
 
     def create(self, request, *args, **kwargs):
-        return helper.create_with_authorization(request, *args, **kwargs)
+        return helper.create_with_authorization(self, request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
-        return helper.destroy_with_authorization(request, *args, **kwargs)
+        return helper.destroy_with_authorization(self, request, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):
         return helper.update_with_authorization(self, request, *args, **kwargs)
