@@ -94,6 +94,7 @@ class CharacterViewSet(ModelViewSet):
             * en caso de no recibir una query, devuelve un listado de todos los personajes
         """
         param = request.query_params
+
         if param:
 
             if param.get('name'):
@@ -176,7 +177,7 @@ class MovieViewSet(ModelViewSet):
 
         else:
             movies = self.get_serializer(self.get_queryset(), many=True)
-            return {list(movies.data)}
+            return Response(movies.data, status=status.HTTP_200_OK)
 
     def retrieve(self, request, *args, **kwargs):
         """
