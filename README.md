@@ -36,5 +36,6 @@ Las rutas de *movie* y *character* pueden recibir los siguientes query params:
 ## mejoras
 1. Implementar documentación en swagger
 2. Mejorar la estructura de carpetas del proyecto
-3. Cambiar la base de datos a postgresql
+3. ~~Cambiar la base de datos a postgresql~~
 4. Implementar el campo 'imagenes' para las tablas
+5. ~~Hacer un deploy para poder consumir la API~~
